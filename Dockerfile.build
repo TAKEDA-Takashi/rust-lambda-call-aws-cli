@@ -1,0 +1,20 @@
+FROM public.ecr.aws/lambda/provided:al2
+
+# リンカーとしてgccを利用する
+RUN yum install -y gcc
+
+# rustupでRustツールチェーンをインストールする
+RUN curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain stable
+ENV PATH $PATH:/root/.cargo/bin
+RUN rustup install stable
+
+# ビルド対象のソースツリーをマウントする
+VOLUME /code
+
+# ローカル環境にRustを導入している場合は以下をコメントアウトするとビルドが早くなります
+VOLUME /root/.cargo/registry
+VOLUME /root/.cargo/git
+
+WORKDIR /code
+# provided:al2 はランタイム用の設定になっているので、ENTRYPOINTをビルド用に書き換える
+ENTRYPOINT ["cargo", "build", "--release"]
